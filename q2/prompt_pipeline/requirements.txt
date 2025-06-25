@@ -1,0 +1,4 @@
+pyyaml>=6.0.1
+pathlib>=1.0.1
+typing>=3.7.4.3
+python-json-logger>=2.0.7 

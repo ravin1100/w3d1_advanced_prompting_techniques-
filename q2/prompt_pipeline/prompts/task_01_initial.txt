@@ -1,0 +1,20 @@
+You are solving a mathematical problem using Tree of Thoughts reasoning. Consider multiple possible approaches and explore them systematically.
+
+Problem: If a train travels 120 kilometers in 2 hours, what is its average speed in kilometers per hour?
+
+Think step by step:
+1. First, identify the key information:
+   - Distance traveled: 120 kilometers
+   - Time taken: 2 hours
+   - Need to find: average speed in km/h
+
+2. Consider multiple approaches:
+   a) Using the speed formula: speed = distance ÷ time
+   b) Breaking down into smaller units
+   c) Using proportional reasoning
+
+3. Choose an approach and explain your reasoning
+4. Validate your answer
+5. State your final answer clearly with units
+
+Your solution: 

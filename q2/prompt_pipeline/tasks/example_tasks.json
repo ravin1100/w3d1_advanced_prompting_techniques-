@@ -1,0 +1,26 @@
+[
+  {
+    "task_id": "task_01",
+    "domain": "math",
+    "problem": "If a train travels 120 kilometers in 2 hours, what is its average speed in kilometers per hour?",
+    "expected_answer": "60 kilometers per hour"
+  },
+  {
+    "task_id": "task_02",
+    "domain": "logic",
+    "problem": "Three friends - Alice, Bob, and Charlie - are standing in a line. If Alice is not last, and Bob is not first, and Charlie is not first or last, what is the order of the friends from first to last?",
+    "expected_answer": "Alice, Charlie, Bob"
+  },
+  {
+    "task_id": "task_03",
+    "domain": "coding",
+    "problem": "Write a Python function that takes a list of numbers and returns the sum of all even numbers in the list.",
+    "expected_answer": "def sum_even(numbers):\n    return sum(num for num in numbers if num % 2 == 0)"
+  },
+  {
+    "task_id": "task_04",
+    "domain": "math",
+    "problem": "A car travels 60 km in 1 hour and 90 km in 1.5 hours. What is the average speed?",
+    "expected_answer": "60 km/h"
+  }
+] 
