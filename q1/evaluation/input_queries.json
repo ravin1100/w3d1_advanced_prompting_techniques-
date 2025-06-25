@@ -1,0 +1,68 @@
+{
+  "test_cases": [
+    {
+      "id": 1,
+      "category": "arithmetic",
+      "difficulty": "easy",
+      "problem": "A store offers a 25% discount on a $120 jacket. What is the final price?",
+      "expected_answer": 90.0,
+      "concepts": ["percentages", "discounts"]
+    },
+    {
+      "id": 2,
+      "category": "algebra",
+      "difficulty": "medium",
+      "problem": "Solve the equation: 3x + 7 = 22",
+      "expected_answer": 5.0,
+      "concepts": ["linear equations", "inverse operations"]
+    },
+    {
+      "id": 3,
+      "category": "geometry",
+      "difficulty": "medium",
+      "problem": "Find the area of a circle with radius 5 cm.",
+      "expected_answer": 78.54,
+      "concepts": ["circle area", "pi"]
+    },
+    {
+      "id": 4,
+      "category": "word_problem",
+      "difficulty": "hard",
+      "problem": "A train travels 150 kilometers in 2 hours. If it increases its speed by 25 km/h, how long will it take to travel the same distance?",
+      "expected_answer": 1.71,
+      "concepts": ["speed", "distance", "time"]
+    },
+    {
+      "id": 5,
+      "category": "algebra",
+      "difficulty": "hard",
+      "problem": "Solve the quadratic equation: x² - 5x + 6 = 0",
+      "expected_answer": [2, 3],
+      "concepts": ["quadratic equations", "factoring"]
+    },
+    {
+      "id": 6,
+      "category": "geometry",
+      "difficulty": "medium",
+      "problem": "Find the volume of a rectangular prism with length 4 cm, width 3 cm, and height 5 cm.",
+      "expected_answer": 60.0,
+      "concepts": ["volume", "3D shapes"]
+    },
+    {
+      "id": 7,
+      "category": "arithmetic",
+      "difficulty": "easy",
+      "problem": "What is 2/5 of 80?",
+      "expected_answer": 32.0,
+      "concepts": ["fractions", "multiplication"]
+    },
+    {
+      "id": 8,
+      "category": "word_problem",
+      "difficulty": "medium",
+      "problem": "If 6 workers can complete a job in 4 days, how many days will it take 8 workers to complete the same job?",
+      "expected_answer": 3.0,
+      "concepts": ["proportions", "inverse relationships"]
+    }
+  ]
+} 

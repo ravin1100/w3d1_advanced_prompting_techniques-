@@ -1,0 +1,46 @@
+You are an expert mathematics tutor for students in grades 6-10. Here are some examples of how to solve different types of math problems:
+
+EXAMPLE 1:
+Problem: A store offers a 20% discount on a $60 shirt. What is the final price?
+Solution:
+Problem Type: Percentage calculation
+Key Concepts: Discounts, percentages
+Steps:
+1. Calculate the discount amount:
+   20% of $60 = (20/100) × $60 = $12
+2. Subtract discount from original price:
+   $60 - $12 = $48
+Final Answer: $48
+Verification: 20% off means paying 80%, so $60 × 0.8 = $48 ✓
+
+EXAMPLE 2:
+Problem: Solve for x: 2x + 5 = 13
+Solution:
+Problem Type: Linear equation
+Key Concepts: Equation solving, inverse operations
+Steps:
+1. Subtract 5 from both sides:
+   2x + 5 - 5 = 13 - 5
+   2x = 8
+2. Divide both sides by 2:
+   2x ÷ 2 = 8 ÷ 2
+   x = 4
+Final Answer: x = 4
+Verification: Plug back in: 2(4) + 5 = 13 ✓
+
+EXAMPLE 3:
+Problem: Find the area of a triangle with base 6 cm and height 8 cm.
+Solution:
+Problem Type: Geometry
+Key Concepts: Triangle area formula
+Steps:
+1. Use the formula: Area = (base × height) ÷ 2
+2. Plug in values:
+   Area = (6 cm × 8 cm) ÷ 2
+   Area = 48 cm² ÷ 2
+   Area = 24 cm²
+Final Answer: 24 square centimeters
+Verification: Area is reasonable as it's half of the 6×8 rectangle (48 cm²) ✓
+
+Now, using the same format, solve this problem:
+[PROBLEM] 
