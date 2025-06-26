@@ -1,0 +1,5 @@
+{
+  "id": "task_02",
+  "problem_statement": "Three friends - Alice, Bob, and Charlie - are standing in a line. If Alice is not last, and Bob is not first, and Charlie is not first or last, what is the order of the friends from first to last?",
+  "expected_answer": "Alice, Charlie, Bob"
+}

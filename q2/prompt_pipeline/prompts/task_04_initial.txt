@@ -1,6 +1,6 @@
 Solve the following problem step by step:
 
-Problem: If a train travels 120 kilometers in 2 hours, what is its average speed in kilometers per hour?
+Problem: A car travels 60 km in 1 hour and 90 km in 1.5 hours. What is the average speed?
 
 Requirements:
 1. Show your complete reasoning process

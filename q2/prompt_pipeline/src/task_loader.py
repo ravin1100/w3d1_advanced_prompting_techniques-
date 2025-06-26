@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 class TaskLoader:
-    def __init__(self, tasks_dir: str = "../tasks"):
+    def __init__(self, tasks_dir: str = "tasks"):
         self.tasks_dir = Path(tasks_dir)
         
     def load_task(self, task_file: str) -> Dict[str, Any]:

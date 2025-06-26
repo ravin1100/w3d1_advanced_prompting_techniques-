@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# Project specific
+prompt_pipeline/logs/*
+!prompt_pipeline/logs/README.md
+prompt_pipeline/evaluation/*
+!prompt_pipeline/evaluation/README.md
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local development
+*.env
+.env.local
+.env.*.local
+*.local
+
+# Model outputs and temporary files
+prompt_pipeline/model_outputs/
+*.tmp
+*.temp 

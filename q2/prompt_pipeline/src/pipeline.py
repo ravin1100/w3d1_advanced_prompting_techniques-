@@ -9,6 +9,8 @@ from .task_loader import TaskLoader
 from .tot_generator import ToTGenerator
 from .aggregator import Aggregator
 from .optimizer import PromptOptimizer
+from .prompt_manager import PromptManager
+from .utils.logging_utils import PipelineLogger
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,23 +18,27 @@ logger = logging.getLogger(__name__)
 class PromptPipeline:
     def __init__(self, 
                  model_name: str = "hf.co/lmstudio-community/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q4_K_M",
-                 base_dir: str = ".."):
+                 base_dir: str = "."):
         self.base_dir = Path(base_dir)
         
+        # Initialize logger first
+        self.logger = PipelineLogger(base_dir=str(self.base_dir))
+        
         # Initialize components
-        self.model_runner = ModelRunner(model_name)
+        self.model_runner = ModelRunner(model_name, base_dir=str(self.base_dir))
         self.task_loader = TaskLoader(str(self.base_dir / "tasks"))
         self.tot_generator = ToTGenerator(self.model_runner)
         self.aggregator = Aggregator(self.model_runner)
-        self.optimizer = PromptOptimizer(self.model_runner, str(self.base_dir / "prompts"))
+        self.optimizer = PromptOptimizer(
+            self.model_runner, 
+            str(self.logger.prompts_dir), 
+            base_dir=str(self.base_dir)
+        )
+        self.prompt_manager = PromptManager(str(self.logger.prompts_dir))
         
-        # Create logs directory
-        self.logs_dir = self.base_dir / "logs"
-        self.logs_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create evaluation directory
-        self.eval_dir = self.base_dir / "evaluation"
-        self.eval_dir.mkdir(parents=True, exist_ok=True)
+        # Use logger's directories
+        self.logs_dir = self.logger.logs_dir
+        self.eval_dir = self.logger.eval_dir
 
     def _create_base_prompt(self, task: Dict[str, Any]) -> str:
         """Create the initial prompt for a task."""
@@ -66,36 +72,75 @@ Your solution:"""
     def run_pipeline(self, task_id: str) -> Dict[str, Any]:
         """Run the complete prompt engineering pipeline for a task."""
         try:
+            logger.info("="*60)
+            logger.info(f"Starting pipeline execution for task: {task_id}")
+            logger.info("="*60)
+            
             # Load task
             task = self.task_loader.load_task(f"{task_id}.json")
-            logger.info(f"Loaded task: {task_id}")
+            logger.info(f"✓ Task {task_id} loaded successfully")
             
-            # Create initial prompt
+            # Create and save initial prompt
+            logger.info(f"➤ Task {task_id}: Creating initial prompt...")
             initial_prompt = self._create_base_prompt(task)
+            self.prompt_manager.save_initial_prompt(
+                task_id=task_id,
+                prompt=initial_prompt
+            )
             current_prompt = initial_prompt
+            logger.info(f"✓ Task {task_id}: Initial prompt created and saved")
             
             # Generate reasoning paths
-            logger.info("Generating reasoning paths...")
+            logger.info(f"\n➤ Task {task_id}: Generating reasoning paths...")
             reasoning_paths = self.tot_generator.generate_reasoning_paths(task)
+            logger.info(f"✓ Task {task_id}: Generated {len(reasoning_paths)} reasoning paths")
             
             # Aggregate results
-            logger.info("Aggregating results...")
+            logger.info(f"\n➤ Task {task_id}: Aggregating results...")
             aggregation_result = self.aggregator.aggregate_responses(reasoning_paths)
+            logger.info(f"✓ Task {task_id}: Results aggregated successfully")
+            
+            # Calculate initial metrics
+            logger.info(f"\n➤ Task {task_id}: Calculating initial metrics...")
+            initial_metrics = {
+                "confidence": aggregation_result.get('confidence', 0),
+                "consistency": len(aggregation_result.get('supporting_answers', [])) / len(reasoning_paths),
+                "correctness": self.optimizer._evaluate_prompt_performance(
+                    {"final_answer": aggregation_result.get('final_answer')}, 
+                    task
+                ).get("correctness", 0)
+            }
+            logger.info(f"✓ Task {task_id}: Initial metrics:")
+            logger.info(f"  • Confidence: {initial_metrics['confidence']:.2f}")
+            logger.info(f"  • Consistency: {initial_metrics['consistency']:.2f}")
             
             # Optimize prompt if needed
-            if aggregation_result.get('confidence', 0) < 0.8:
-                logger.info("Optimizing prompt...")
+            if initial_metrics["confidence"] < 0.8:
+                logger.info(f"\n➤ Task {task_id}: Confidence below threshold (0.8), starting optimization...")
                 optimization_result = self.optimizer.optimize_prompt(
                     initial_prompt=current_prompt,
                     task=task,
                     results=aggregation_result
                 )
                 current_prompt = optimization_result['optimized_prompt']
+                logger.info(f"✓ Task {task_id}: Prompt optimization completed")
+                
+                # Save optimized prompt
+                self.prompt_manager.save_optimized_prompt(
+                    task_id=task_id,
+                    prompt=current_prompt,
+                    metrics=optimization_result['metrics']
+                )
                 
                 # Re-run with optimized prompt
-                logger.info("Re-running with optimized prompt...")
+                logger.info(f"\n➤ Task {task_id}: Re-running with optimized prompt...")
                 reasoning_paths = self.tot_generator.generate_reasoning_paths(task)
                 aggregation_result = self.aggregator.aggregate_responses(reasoning_paths)
+                logger.info(f"✓ Task {task_id}: Re-run completed")
+            
+            # Get final metrics and improvements
+            logger.info(f"\n➤ Task {task_id}: Calculating final metrics...")
+            improvement_metrics = self.prompt_manager.get_improvement_metrics(task_id)
             
             # Prepare run results
             run_results = {
@@ -105,33 +150,23 @@ Your solution:"""
                 "final_prompt": current_prompt,
                 "reasoning_paths": reasoning_paths,
                 "aggregation_result": aggregation_result,
-                "metrics": {
-                    "confidence": aggregation_result.get('confidence', 0),
-                    "consistency": len(aggregation_result.get('supporting_answers', [])) / len(reasoning_paths),
-                    "final_answer": aggregation_result.get('final_answer'),
-                    "expected_answer": task.get('expected_answer')
-                }
+                "metrics": improvement_metrics
             }
             
-            # Log results
+            # Log results and save evaluation
             self._log_run_results(task_id, run_results)
+            self._save_evaluation(task_id, improvement_metrics)
             
-            # Save evaluation
-            evaluation = {
-                "task_id": task_id,
-                "timestamp": str(datetime.datetime.now()),
-                "metrics": run_results["metrics"],
-                "prompt_versions": {
-                    "initial": initial_prompt,
-                    "final": current_prompt
-                }
-            }
-            self._save_evaluation(task_id, evaluation)
-            
+            logger.info("\n" + "="*60)
+            logger.info(f"✓ Task {task_id}: Pipeline completed successfully")
+            logger.info("="*60)
             return run_results
             
         except Exception as e:
-            logger.error(f"Error running pipeline for task {task_id}: {e}")
+            logger.error("\n" + "="*60)
+            logger.error(f"✗ Task {task_id}: Pipeline failed")
+            logger.error(f"Error: {str(e)}")
+            logger.error("="*60)
             raise
 
 if __name__ == "__main__":
@@ -157,8 +192,8 @@ if __name__ == "__main__":
         
         print("\nPipeline Results:")
         print(f"Final Answer: {results['aggregation_result']['final_answer']}")
-        print(f"Confidence: {results['metrics']['confidence']:.2f}")
-        print(f"Consistency: {results['metrics']['consistency']:.2f}")
+        print(f"Confidence: {results['metrics']['improvements']['confidence']['final']:.2f}")
+        print(f"Consistency: {results['metrics']['improvements']['consistency']['final']:.2f}")
         
     except Exception as e:
         print(f"Error running example: {e}") 

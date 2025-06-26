@@ -35,8 +35,13 @@ Your reasoning:"""
 
     def _evaluate_path(self, response: str, task: Dict[str, Any]) -> float:
         """Evaluate the quality of a reasoning path."""
-        # Create an evaluation prompt
-        eval_prompt = f"""Evaluate the following reasoning path for solving this problem:
+        task_id = str(task.get('id') or task.get('task_id', 'unknown'))
+        
+        # Create an evaluation prompt that strongly emphasizes numeric-only response
+        eval_prompt = f"""Rate the following reasoning path from 0 to 1 based on:
+1. Logical coherence
+2. Step-by-step clarity
+3. Likelihood of reaching the correct solution
 
 Problem: {task['problem_statement']}
 Expected Answer: {task.get('expected_answer', 'Not provided')}
@@ -44,36 +49,65 @@ Expected Answer: {task.get('expected_answer', 'Not provided')}
 Reasoning Path:
 {response}
 
-Rate this reasoning path from 0 to 1 based on:
-1. Logical coherence
-2. Step-by-step clarity
-3. Likelihood of reaching the correct solution
+IMPORTANT: Your response must be ONLY a single number between 0 and 1.
+Do not include any explanations, text, or symbols - just the number.
+Examples of valid responses: 0.8 or 0.75 or 0.9
+Invalid responses: "The score is 0.8" or "0.8/1" or "80%"
 
-Provide only the numerical score."""
+Your rating (0 to 1):"""
 
         try:
-            score_response = self.model_runner.generate_response(eval_prompt)
+            score_response = self.model_runner.generate_response(
+                eval_prompt,
+                task_id=f"{task_id}_eval"
+            )
             if score_response is None:
-                logger.warning("Model returned None response, defaulting to 0.5")
+                logger.warning(f"Task {task_id}: Model returned None response, defaulting to 0.5")
                 return 0.5
-            score = float(score_response.strip())
-            return min(max(score, 0), 1)  # Ensure score is between 0 and 1
-        except (ValueError, AttributeError):
-            logger.warning("Failed to get valid score, defaulting to 0.5")
+                
+            # Log the raw response for debugging
+            logger.debug(f"Task {task_id}: Raw score response: {repr(score_response)}")
+            
+            # Clean up the response - extract the first number found
+            import re
+            numbers = re.findall(r'0\.\d+|\d+\.?\d*', score_response)
+            if not numbers:
+                logger.warning(f"Task {task_id}: No numeric value found in response: {score_response}")
+                return 0.5
+            
+            # Get the first number found
+            score = float(numbers[0])
+            
+            # If the number is between 0 and 100, assume it's a percentage and convert to 0-1
+            if score > 1:
+                score = score / 100
+            
+            # Ensure the score is between 0 and 1
+            score = max(0.0, min(1.0, score))
+            
+            logger.info(f"Task {task_id}: Evaluation score: {score:.2f}")
+            return score
+            
+        except Exception as e:
+            logger.warning(f"Task {task_id}: Failed to get valid score: {str(e)}, defaulting to 0.5")
             return 0.5
 
     def generate_reasoning_paths(self, task: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate multiple reasoning paths for a given task."""
         paths = []
+        task_id = str(task.get('id') or task.get('task_id', 'unknown'))  # Ensure string and provide default
         
-        for _ in range(self.num_paths):
+        for path_num in range(self.num_paths):
             current_path = []
             full_reasoning = []
             
             for depth in range(self.max_depth):
                 # Generate next step in reasoning
                 prompt = self._create_tot_prompt(task, current_path)
-                response = self.model_runner.generate_response(prompt)
+                response = self.model_runner.generate_response(
+                    prompt,
+                    task_id=task_id,  # Pass the task_id
+                )
                 
                 if not response:
                     break

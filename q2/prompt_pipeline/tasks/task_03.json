@@ -1,0 +1,5 @@
+{
+  "id": "task_03",
+  "problem_statement": "Write a Python function that takes a list of numbers and returns the sum of all even numbers in the list.",
+  "expected_answer": "def sum_even(numbers):\n    return sum(num for num in numbers if num % 2 == 0)"
+}

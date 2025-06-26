@@ -1,6 +1,6 @@
 Solve the following problem step by step:
 
-Problem: If a train travels 120 kilometers in 2 hours, what is its average speed in kilometers per hour?
+Problem: Write a Python function that takes a list of numbers and returns the sum of all even numbers in the list.
 
 Requirements:
 1. Show your complete reasoning process

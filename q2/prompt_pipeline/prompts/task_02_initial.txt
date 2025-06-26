@@ -1,6 +1,6 @@
 Solve the following problem step by step:
 
-Problem: If a train travels 120 kilometers in 2 hours, what is its average speed in kilometers per hour?
+Problem: Three friends - Alice, Bob, and Charlie - are standing in a line. If Alice is not last, and Bob is not first, and Charlie is not first or last, what is the order of the friends from first to last?
 
 Requirements:
 1. Show your complete reasoning process

@@ -14,27 +14,43 @@ class Aggregator:
 
     def _extract_final_answer(self, reasoning: str) -> str:
         """Extract the final answer from a reasoning path."""
-        # Look for common conclusion patterns
-        patterns = [
-            r"therefore,?\s*(the\s*)?(?:answer\s*is\s*)?([^\.]+)",
-            r"conclusion:?\s*([^\.]+)",
-            r"final\s*answer:?\s*([^\.]+)",
-            r"thus,?\s*(the\s*)?(?:answer\s*is\s*)?([^\.]+)"
-        ]
-        
-        for pattern in patterns:
-            matches = re.finditer(pattern, reasoning.lower())
-            # Take the last match as it's likely to be the final conclusion
-            last_match = None
-            for match in matches:
-                last_match = match
+        # Add null check for reasoning
+        if reasoning is None:
+            logger.warning("Received None instead of reasoning text")
+            return "No answer available"
             
-            if last_match:
-                return last_match.group(1).strip()
-        
-        # If no pattern matches, return the last sentence
-        sentences = reasoning.split('.')
-        return sentences[-1].strip()
+        try:
+            # Look for common conclusion patterns
+            patterns = [
+                r"therefore,?\s*(the\s*)?(?:answer\s*is\s*)?([^\.]+)",
+                r"conclusion:?\s*([^\.]+)",
+                r"final\s*answer:?\s*([^\.]+)",
+                r"thus,?\s*(the\s*)?(?:answer\s*is\s*)?([^\.]+)"
+            ]
+            
+            reasoning_text = reasoning.lower()
+            for pattern in patterns:
+                matches = list(re.finditer(pattern, reasoning_text))
+                if matches:
+                    # Take the last match as it's likely to be the final conclusion
+                    last_match = matches[-1]
+                    # Make sure we get the right capture group (some patterns have 2 groups)
+                    answer = last_match.group(2) if len(last_match.groups()) > 1 else last_match.group(1)
+                    if answer:
+                        return answer.strip()
+            
+            # If no pattern matches, return the last sentence
+            sentences = [s.strip() for s in reasoning.split('.') if s.strip()]
+            if sentences:
+                return sentences[-1]
+                
+            # If we couldn't find any valid answer
+            logger.warning(f"Could not extract answer from reasoning: {reasoning[:100]}...")
+            return "No clear answer found"
+            
+        except Exception as e:
+            logger.error(f"Error extracting final answer: {str(e)}")
+            return "Error extracting answer"
 
     def _calculate_answer_similarity(self, answer1: str, answer2: str) -> float:
         """Calculate similarity between two answers using the model."""
@@ -48,16 +64,36 @@ Consider:
 2. Semantic meaning
 3. Units and format
 
-Provide only the numerical score."""
+Your response must be ONLY a number between 0 and 1. Do not include any other text."""
 
         try:
             response = self.model_runner.generate_response(similarity_prompt)
             if response is None:
+                logger.warning("Model returned None for similarity calculation")
                 return 0.0
-            score = float(response.strip())
-            return min(max(score, 0), 1)  # Ensure score is between 0 and 1
-        except (ValueError, AttributeError):
-            logger.warning("Failed to calculate similarity, defaulting to 0")
+                
+            # Log the raw response
+            logger.info(f"Raw similarity response: {repr(response)}")
+            
+            # Clean up the response - remove any non-numeric characters
+            cleaned_response = ''.join(c for c in response if c.isdigit() or c == '.')
+            if not cleaned_response:
+                logger.warning(f"No numeric value found in similarity response: {response}")
+                return 0.0
+                
+            # Try to convert to float
+            try:
+                score = float(cleaned_response)
+                # Handle percentage values
+                if score > 1:
+                    score = score / 100 if score <= 100 else 0.0
+                return min(max(score, 0), 1)  # Ensure score is between 0 and 1
+            except ValueError as e:
+                logger.warning(f"Failed to convert cleaned similarity response '{cleaned_response}' to float: {e}")
+                return 0.0
+                
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Failed to calculate similarity: {e}")
             return 0.0
 
     def _cluster_answers(self, answers: List[Tuple[str, float]]) -> List[List[Tuple[str, float]]]:
